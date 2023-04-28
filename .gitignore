@@ -112,7 +112,7 @@ celerybeat.pid
 *.sage.py
 
 # Secrets
-secrets.py
+api_secrets.py
 
 # Environments
 .env
