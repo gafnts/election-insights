@@ -1,1 +1,1 @@
-from .api_secrets import TwitterAuthentication, openai_api_key
+from .api_secrets import TwitterAuthentication, OpenAIAuthentication

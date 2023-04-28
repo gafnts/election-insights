@@ -114,6 +114,9 @@ celerybeat.pid
 # Secrets
 api_secrets.py
 
+# Data
+*.csv
+
 # Environments
 .env
 .venv
