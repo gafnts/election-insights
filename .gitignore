@@ -113,6 +113,7 @@ celerybeat.pid
 
 # Secrets
 api_secrets.py
+docker-compose.yml
 
 # Data
 *.csv
