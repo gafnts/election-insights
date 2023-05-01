@@ -8,39 +8,33 @@ twitter = TwitterAuthenticator()
 client = tweepy.Client(bearer_token=twitter.bearer_token)
 
 
-def get_tweets(query: str, start_time: str, end_time: str, max_results: int) -> requests.Response:
-    query = query = f"{query} -is:retweet -is:reply"
-    tweets = client.search_recent_tweets(
-        query = query,
-        start_time = start_time,
-        end_time = end_time,
-        max_results = max_results,
-        tweet_fields = [
-            "id", "author_id", "created_at", "text", 
-            "public_metrics", "possibly_sensitive", "lang"
-        ],
-        user_fields = [
-            "id", "username", "name", "location", "created_at", "description", 
-            "profile_image_url", "verified", "public_metrics"
-        ],
-        expansions = [
-            "author_id", "referenced_tweets.id"
-        ]
-    )
-    return tweets
-
-
-class TwitterDataCleaner:
-    def __init__(self, tweets: requests.Response) -> None:
-        self.tweets = tweets
-        self.df = None
-
-    def run(self) -> pd.DataFrame:
-        self.extract_tweet_data()
-        self.extract_user_data()
-        self.segregate_data()
-        tweets_df, users_df = self.clean_data()
-        return tweets_df, users_df
+class TwitterAPI:
+    def __init__(self, query: str, start_time: str, end_time: str, max_results: str) -> None:
+        self.query = query
+        self.start_time = start_time
+        self.end_time = end_time
+        self.max_results = max_results
+    
+    def get_tweets(self) -> None:
+        self.query = f"{self.query} -is:retweet -is:reply"
+        self.tweets = client.search_recent_tweets(
+            query = self.query,
+            start_time = self.start_time,
+            end_time = self.end_time,
+            max_results = self.max_results,
+            tweet_fields = [
+                "id", "author_id", "created_at", "text", 
+                "public_metrics", "possibly_sensitive", "lang"
+            ],
+            user_fields = [
+                "id", "username", "name", "location", "created_at", "description", 
+                "profile_image_url", "verified", "public_metrics"
+            ],
+            expansions = [
+                "author_id", "referenced_tweets.id"
+            ]
+        )
+        return self
 
     def extract_tweet_data(self) -> None:
         tweet_data = []
@@ -51,6 +45,7 @@ class TwitterDataCleaner:
             tweet_data.append(tweet_dict)
 
         self.df = pd.DataFrame(tweet_data)
+        return self
 
     def extract_user_data(self) -> None:
         users = {user.id: user for user in self.tweets.includes['users']}
@@ -67,6 +62,7 @@ class TwitterDataCleaner:
             self.df[col] = self.df['user_data'].apply(lambda x: x.get(col, None))
 
         self.df = self.df.drop(columns = ['user_data'])
+        return self
 
     def segregate_data(self) -> None:
         self.tweets_df = self.df[[
@@ -79,45 +75,43 @@ class TwitterDataCleaner:
             "user_description", "user_profile_image_url", "user_verified",
             "user_followers_count", "user_following_count", "user_tweet_count", "user_listed_count"
         ]]
+        return self
 
-    def clean_data(self) -> pd.DataFrame:
-        prefix = "tw_"
-        tweets_df = (
+    def clean_data(self, tweets_prefix: str, users_prefix: str) -> pd.DataFrame:
+        self.tweets_df = (
             self.tweets_df
             .rename(columns={
-            "id": f"{prefix}tweet",
-            "author_id": f"{prefix}usuario",
-            "created_at": f"{prefix}fecha",
-            "text": f"{prefix}texto",
-            "possibly_sensitive": f"{prefix}sensitivo",
-            "retweet_count": f"{prefix}retweets",
-            "reply_count": f"{prefix}replies",
-            "like_count": f"{prefix}likes",
-            "quote_count": f"{prefix}quotes",
-            "impression_count": f"{prefix}impresiones",
-            "lang": f"{prefix}idioma"
+            "id": f"{tweets_prefix}tweet",
+            "author_id": f"{tweets_prefix}usuario",
+            "created_at": f"{tweets_prefix}fecha",
+            "text": f"{tweets_prefix}texto",
+            "possibly_sensitive": f"{tweets_prefix}sensitivo",
+            "retweet_count": f"{tweets_prefix}retweets",
+            "reply_count": f"{tweets_prefix}replies",
+            "like_count": f"{tweets_prefix}likes",
+            "quote_count": f"{tweets_prefix}quotes",
+            "impression_count": f"{tweets_prefix}impresiones",
+            "lang": f"{tweets_prefix}idioma"
             })
             .assign(tw_fecha = lambda x: pd.to_datetime(x.tw_fecha).dt.date)
         )
 
-        prefix = "us_"
-        users_df = (
+        self.users_df = (
             self.users_df
             .rename(columns={
-                "user_id": f"{prefix}usuario",
-                "user_username": f"{prefix}handle",
-                "user_name": f"{prefix}nombre",
-                "user_location": f"{prefix}ubicacion",
-                "user_created_at": f"{prefix}fecha_creacion",
-                "user_description": f"{prefix}descripcion",
-                "user_profile_image_url": f"{prefix}imagen",
-                "user_verified": f"{prefix}verificado",
-                "user_followers_count": f"{prefix}seguidores",
-                "user_following_count": f"{prefix}siguiendo",
-                "user_tweet_count": f"{prefix}tweets",
-                "user_listed_count": f"{prefix}listas"
+                "user_id": f"{users_prefix}usuario",
+                "user_username": f"{users_prefix}handle",
+                "user_name": f"{users_prefix}nombre",
+                "user_location": f"{users_prefix}ubicacion",
+                "user_created_at": f"{users_prefix}fecha_creacion",
+                "user_description": f"{users_prefix}descripcion",
+                "user_profile_image_url": f"{users_prefix}imagen",
+                "user_verified": f"{users_prefix}verificado",
+                "user_followers_count": f"{users_prefix}seguidores",
+                "user_following_count": f"{users_prefix}siguiendo",
+                "user_tweet_count": f"{users_prefix}tweets",
+                "user_listed_count": f"{users_prefix}listas"
             })
             .assign(us_fecha_creacion = lambda x: pd.to_datetime(x.us_fecha_creacion).dt.date)
         )
-
-        return tweets_df, users_df
+        return self.tweets_df, self.users_df
