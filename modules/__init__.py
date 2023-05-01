@@ -1,1 +1,1 @@
-from .twitter import TwitterDataCleaner, get_tweets
+from .twitter import TwitterAPI
