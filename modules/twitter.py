@@ -1,5 +1,4 @@
 import tweepy
-import requests
 import pandas as pd
 from authenticators import TwitterAuthenticator
 
@@ -8,14 +7,14 @@ twitter = TwitterAuthenticator()
 client = tweepy.Client(bearer_token=twitter.bearer_token)
 
 
-class TwitterAPI:
+class TwitterRequest:
     def __init__(self, query: str, start_time: str, end_time: str, max_results: str) -> None:
         self.query = query
         self.start_time = start_time
         self.end_time = end_time
         self.max_results = max_results
     
-    def get_tweets(self) -> None:
+    def request(self) -> None:
         self.query = f"{self.query} -is:retweet -is:reply"
         self.tweets = client.search_recent_tweets(
             query = self.query,
@@ -36,7 +35,7 @@ class TwitterAPI:
         )
         return self
 
-    def extract_tweet_data(self) -> None:
+    def extract_tweets(self) -> None:
         tweet_data = []
         for tweet in self.tweets.data:
             tweet_dict = {key: getattr(tweet, key) for key in tweet.data.keys()}
@@ -47,7 +46,7 @@ class TwitterAPI:
         self.df = pd.DataFrame(tweet_data)
         return self
 
-    def extract_user_data(self) -> None:
+    def extract_users(self) -> None:
         users = {user.id: user for user in self.tweets.includes['users']}
         for key, user in users.items():
             user_data = {f"user_{key}": getattr(user, key) for key in user.data.keys()}
@@ -64,7 +63,7 @@ class TwitterAPI:
         self.df = self.df.drop(columns = ['user_data'])
         return self
 
-    def segregate_data(self) -> None:
+    def segregate(self) -> None:
         self.tweets_df = self.df[[
             "id", "author_id", "created_at", "text", "possibly_sensitive", "retweet_count",
             "reply_count", "like_count", "quote_count", "impression_count", "lang"
@@ -77,7 +76,7 @@ class TwitterAPI:
         ]]
         return self
 
-    def clean_data(self, tweets_prefix: str, users_prefix: str) -> pd.DataFrame:
+    def preprocess(self, tweets_prefix: str, users_prefix: str) -> pd.DataFrame:
         self.tweets_df = (
             self.tweets_df
             .rename(columns={

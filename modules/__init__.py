@@ -1,1 +1,1 @@
-from .twitter import TwitterAPI
+from .twitter import TwitterRequest
