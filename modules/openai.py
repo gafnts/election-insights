@@ -35,7 +35,7 @@ def remove_emojis_and_links(text: str) -> str:
     return text
 
 
-def gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: float = 0) -> str: 
+def get_gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: float = 0) -> str: 
     messages = [{"role": "user", "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,
@@ -45,11 +45,11 @@ def gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: float =
     return response.choices[0].message["content"]
 
 
-class FeatureExtractor:
+class GPTFeatureExtractor:
     def __init__(self, tweets: pd.DataFrame) -> None:
         self.tweets = tweets
         
-    def preprocess_text(self) -> "GPTFeatureExtraction":
+    def preprocess_text(self) -> "GPTFeatureExtractor":
         self.preprocessed_tweets = (
             self.tweets
             .assign(
@@ -90,7 +90,7 @@ class FeatureExtractor:
                 Tweet: '''{row['tw_texto']}'''
                 """
 
-            response = gpt_features(prompt)
+            response = get_gpt_features(prompt)
             response = json.loads(response)
             response = pd.DataFrame([response])
             collector.append(response)

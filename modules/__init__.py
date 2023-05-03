@@ -1,2 +1,2 @@
 from .twitter import TwitterRequest
-from .openai import FeatureExtractor
+from .openai import GPTFeatureExtractor
