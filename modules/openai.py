@@ -45,7 +45,7 @@ def gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: float =
     return response.choices[0].message["content"]
 
 
-class GPTFeatureExtraction:
+class FeatureExtractor:
     def __init__(self, tweets: pd.DataFrame) -> None:
         self.tweets = tweets
         
