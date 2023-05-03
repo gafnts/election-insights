@@ -14,7 +14,7 @@ class TwitterRequest:
         self.end_time = end_time
         self.max_results = max_results
     
-    def request(self) -> None:
+    def request(self) -> "TwitterRequest":
         self.query = f"{self.query} -is:retweet -is:reply"
         self.tweets = client.search_recent_tweets(
             query = self.query,
@@ -35,7 +35,7 @@ class TwitterRequest:
         )
         return self
 
-    def extract_tweets(self) -> None:
+    def extract_tweets(self) -> "TwitterRequest":
         tweet_data = []
         for tweet in self.tweets.data:
             tweet_dict = {key: getattr(tweet, key) for key in tweet.data.keys()}
@@ -46,7 +46,7 @@ class TwitterRequest:
         self.df = pd.DataFrame(tweet_data)
         return self
 
-    def extract_users(self) -> None:
+    def extract_users(self) -> "TwitterRequest":
         users = {user.id: user for user in self.tweets.includes['users']}
         for key, user in users.items():
             user_data = {f"user_{key}": getattr(user, key) for key in user.data.keys()}
@@ -63,7 +63,7 @@ class TwitterRequest:
         self.df = self.df.drop(columns = ['user_data'])
         return self
 
-    def segregate(self) -> None:
+    def segregate(self) -> "TwitterRequest":
         self.tweets_df = self.df[[
             "id", "author_id", "created_at", "text", "possibly_sensitive", "retweet_count",
             "reply_count", "like_count", "quote_count", "impression_count", "lang"
