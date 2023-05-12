@@ -64,28 +64,24 @@ class GPTFeatureExtractor:
 
         for _, row in preprocessed_tweets.iterrows():
             prompt = f"""
-                El siguiente es un tweet en español. Por favor, clasifícalo de acuerdo a las siguientes categorías:
+                El siguiente es un tweet que menciona a un candidato presidencial dentro de la contienda electoral 2023 en Guatemala. Por favor, clasifícalo de acuerdo a las siguientes categorías:
 
-                Valencia: [positivo, negativo, neutral]
-                Emoción: [felicidad, tristeza, enojo, miedo, sorpresa, disgusto, neutral]
-                Postura: [aprobación, desaprobación, esperanza, desilusión, indiferencia, condianza, desconfianza]
-                Tono: [agresivo, pasivo, asertivo, escéptico, irónico, humorístico, informativo, serio, inspiridor, otro]
-                Tema: [política, economía, deportes, entretenimiento, tecnología, ciencia, salud, educación, religión, cultura, medio ambiente, otro]
+                Valencia (sentimiento general): [positivo, negativo, neutral]
+                Emoción (emoción principal expresada): [felicidad, tristeza, enojo, miedo, sorpresa, disgusto, neutral]
+                Postura (actitud hacia el tema): [aprobación, desaprobación, esperanza, desilusión, indiferencia, confianza, desconfianza]
+                Tono (forma de expresarse): [agresivo, pasivo, asertivo, escéptico, irónico, humorístico, informativo, serio, inspirador, otro]
 
                 Además, evalúalo utilizando una escala continua con rango de 0 a 1 en las siguientes dimensiones:
 
-                Amabilidad: [0.0 - 1.0]
-                Legibilidad: [0.0 - 1.0]
-                Controversialidad: [0.0 - 1.0]
-                Informatividad: [0.0 - 1.0]
-                Espectro político: [0.0 - 1.0] (0 = izquierda, 1 = derecha)
+                Amabilidad (nivel de cortesía): [0.0 - 1.0]
+                Legibilidad (facilidad de lectura): [0.0 - 1.0]
+                Controversialidad (potencial para generar desacuerdo): [0.0 - 1.0]
+                Informatividad (cantidad de información relevante y fundamentada): [0.0 - 1.0]
 
                 Formatea tu respuesta como un diccionario de Python con las siguientes llaves:
 
-                [
-                    {prefix}valencia, {prefix}emocion, {prefix}postura, {prefix}tono, {prefix}tema, {prefix}amabilidad, 
-                    {prefix}legibilidad, {prefix}controversialidad, {prefix}informatividad, {prefix}espectro_politico
-                ]
+                [{prefix}valencia, {prefix}emocion, {prefix}postura, {prefix}tono, 
+                {prefix}amabilidad, {prefix}legibilidad, {prefix}controversialidad, {prefix}informatividad]
 
                 Tweet: '''{row['tw_texto']}'''
                 """
@@ -94,7 +90,7 @@ class GPTFeatureExtractor:
             response = json.loads(response)
             response = pd.DataFrame([response])
             collector.append(response)
-            time.sleep(1)
+            time.sleep(3)
 
         new_features = pd.concat(collector, axis=0, ignore_index=True)
         self.expanded_tweets = pd.concat([self.preprocessed_tweets, new_features], axis=1)
