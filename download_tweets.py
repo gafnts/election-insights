@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from typing import Tuple
+from modules import setup_logger
 from modules import GetTweets
 from datetime import datetime, timedelta
 
@@ -11,8 +12,7 @@ candidates = [
 ]
 
 start_date = datetime(2023, 5, 15, 00, 00)
-end_date = datetime(2023, 5, 18, 00, 00)
-
+end_date = datetime(2023, 5, 17, 00, 00)
 max_results = 10
 tweets_prefix = 'tw_'
 users_prefix = 'us_'
@@ -29,6 +29,7 @@ class DownloadTweets:
             users_prefix: str
         ) -> None:
 
+        # Initialize parameters.
         self.candidates = candidates
         self.start_date = start_date
         self.end_date = end_date
@@ -36,21 +37,15 @@ class DownloadTweets:
         self.tweets_prefix = tweets_prefix
         self.users_prefix = users_prefix
 
+        # Initialize logger.
+        self.logger = setup_logger(__name__, "download_tweets.log")
+        self.logger.info("DownloadTweets initialized.")
+
     def generate_dates(self) -> "DownloadTweets":
         """
         This method generates a list of date pairs, representing each day from the 
         defined start_date to the defined end_date.
-
-        Its purpose is to be used in the download_tweets method, so that the tweets
-        can be downloaded in batches, one batch per day.
         """
-
-        # Handle some common errors.
-        if not isinstance(self.start_date, datetime) or not isinstance(self.end_date, datetime):
-            raise TypeError("start_date and end_date should be datetime objects")
-
-        if self.start_date > self.end_date:
-            raise ValueError("start_date cannot be later than end_date")
 
         # Generate date pairs.
         delta = timedelta(days=1)
@@ -71,12 +66,6 @@ class DownloadTweets:
         """
         This method downloads a batch of tweets and users for a given candidate and date 
         pair. It returns a tuple of two pd.DataFrames, one for tweets and one for users.
-
-        It uses the GetTweets class to make the request, and then it uses the methods
-        tweets_to_dataframe and users_to_dataframe to store the tweets and users into
-        a pd.DataFrame. Then, it uses the segregate_dataframe method to segregate that
-        dataframe into one dataframe for tweets and one for users. Finally, it uses the 
-        preprocess_data method to do some light preprocessing.
         """
 
         tweets, users = (
@@ -99,23 +88,17 @@ class DownloadTweets:
         # Add a column for the candidate mentioned in each tweet.
         tweets['candidato'] = candidate
 
+        self.logger.info(f"Downloaded batch of {len(tweets)} tweets for candidate {candidate}.")
         return tweets, users
     
     def download_tweets(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         This method downloads all tweets and users for the defined candidates and dates.
         It returns a tuple of two pd.DataFrames, one for tweets and one for users.
-
-        It uses the generate_dates method to generate a list of date pairs, representing
-        each day from the defined start_date to the defined end_date. Then, it uses the
-        get_batch method to download a batch of tweets and users for each candidate and
-        date pair.
-
-        The tweets and users are concatenated into two pd.DataFrames, one for tweets and
-        one for users. Finally, the method returns a tuple of those two pd.DataFrames.
         """
         
         self.generate_dates()
+        self.logger.info(f"Generated {len(self.dates)} date pairs for tweet downloads.")
 
         # Collect tweets and users for each candidate.
         tweets_collector, users_collector = [], []
@@ -135,6 +118,7 @@ class DownloadTweets:
         self.tweets = pd.concat(tweets_collector, axis=0, ignore_index=True)
         self.users = pd.concat(users_collector, axis=0, ignore_index=True)
 
+        self.logger.info(f"Downloaded a total of {len(self.tweets)} tweets and {len(self.users)} users.")
         return self.tweets, self.users
 
 
@@ -153,7 +137,9 @@ def main() -> Tuple[pd.DataFrame, pd.DataFrame]:
         return tweets, users
     
     except Exception as e:
-        print(f"Failed to download tweets: {e}")
+        logger = setup_logger(__name__, "download_tweets.log")
+        logger.error(f"Failed to download tweets: {e}")
+        raise e
 
 
 if __name__ == "__main__":
@@ -161,10 +147,13 @@ if __name__ == "__main__":
     # Download tweets.
     tweets, users = main()
     
-    # Create data folder if it doesn't exist.
+    # Create data folder if it does not exist.
     if not os.path.exists('data'):
         os.makedirs('data')
 
     # Save the data.
     tweets.to_csv('data/tweets.csv', index=False)
     users.to_csv('data/users.csv', index=False)
+
+    logger = setup_logger(__name__, "download_tweets.log")
+    logger.info("Data saved to 'data/tweets.csv' and 'data/users.csv'")
