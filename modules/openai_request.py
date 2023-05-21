@@ -52,11 +52,11 @@ def get_gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: flo
     return response.choices[0].message["content"]
 
 
-class GPTFeatureExtractor:
+class GetGPTFeatures:
     def __init__(self, tweets: pd.DataFrame) -> None:
         self.tweets = tweets
         
-    def preprocess_text(self) -> "GPTFeatureExtractor":
+    def preprocess_text(self) -> "GetGPTFeatures":
         self.preprocessed_tweets = (
             self.tweets
             .assign(
