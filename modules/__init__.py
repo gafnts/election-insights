@@ -1,2 +1,2 @@
-from .twitter import TwitterRequest
-from .openai import GPTFeatureExtractor
+from .twitter_request import GetTweets
+from .openai_request import GetGPTFeatures
