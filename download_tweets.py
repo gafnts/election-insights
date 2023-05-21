@@ -1,18 +1,35 @@
 import os
 import pandas as pd
 from typing import Tuple
-from modules import setup_logger
 from modules import GetTweets
+from modules import setup_logger
 from datetime import datetime, timedelta
 
+""""
+This program downloads tweets from the Twitter API and stores them in a
+pd.DataFrame. It also stores the users associated with the tweets in a
+separate pd.DataFrame.
 
-# Requests parameters.
+Since the GET_2_tweets_search_recent endpoint of the Twitter API only
+allows to download tweets from the last 7 days in batches of 60 tweets 
+every 15 minutes, the program is designed to download tweets in batches.
+
+The candidates selected are the five people currently leading the polls
+for the 2023 presidential elections in Guatemala. As of the Prensa Libre's
+poll of May 2023, these candidates are:
+"""
+
 candidates = [
-    'sandra torres', 'zury ríos'
+    'carlos pineda', 
+    'sandra torres', 
+    'edmond mulet', 
+    'zury rios', 
+    'manuel conde'
 ]
 
+# Other request parameters.
 start_date = datetime(2023, 5, 15, 00, 00)
-end_date = datetime(2023, 5, 17, 00, 00)
+end_date = datetime(2023, 5, 20, 00, 00)
 max_results = 10
 tweets_prefix = 'tw_'
 users_prefix = 'us_'
@@ -38,7 +55,7 @@ class DownloadTweets:
         self.users_prefix = users_prefix
 
         # Initialize logger.
-        self.logger = setup_logger(__name__, "download_tweets.log")
+        self.logger = setup_logger(__name__, "logs/download_tweets.log")
         self.logger.info("DownloadTweets initialized.")
 
     def generate_dates(self) -> "DownloadTweets":
@@ -146,14 +163,17 @@ if __name__ == "__main__":
 
     # Download tweets.
     tweets, users = main()
-    
+
     # Create data folder if it does not exist.
     if not os.path.exists('data'):
         os.makedirs('data')
 
     # Save the data.
-    tweets.to_csv('data/tweets.csv', index=False)
-    users.to_csv('data/users.csv', index=False)
+    write_header = not os.path.exists('data/tweets.csv')
+    tweets.to_csv('data/tweets.csv', mode='a', index=False, header=write_header)
+    
+    write_header = not os.path.exists('data/users.csv')
+    users.to_csv('data/users.csv', mode='a', index=False, header=write_header)
 
     logger = setup_logger(__name__, "download_tweets.log")
-    logger.info("Data saved to 'data/tweets.csv' and 'data/users.csv'")
+    logger.info("Data appended to 'data/tweets.csv' and 'data/users.csv'")

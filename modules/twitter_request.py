@@ -31,7 +31,7 @@ class GetTweets:
         self.max_results = max_results
 
         # Initialize logger.
-        self.logger = setup_logger(__name__, "twitter_request.log")
+        self.logger = setup_logger(__name__, "logs/twitter_request.log")
     
     # Exponential backoff in case of API rate limit or timeout.
     @backoff.on_exception(
