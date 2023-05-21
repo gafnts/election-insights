@@ -1,9 +1,9 @@
 import os
 import tweepy
-import logging
 import backoff
 import requests
 import pandas as pd
+from modules import setup_logger
 
 
 bearer_token = os.environ.get('TWITTER_BEARER_TOKEN')
@@ -23,30 +23,17 @@ class GetTweets:
     """
     
     def __init__(self, query: str, start_time: str, end_time: str, max_results: str) -> None:
-        # Initialize variables
+        
+        # Initialize parameters.
         self.query = query
         self.start_time = start_time
         self.end_time = end_time
         self.max_results = max_results
 
-        # Initialize logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-
-        file_handler = logging.FileHandler("twitter_request.log")
-        file_handler.setLevel(logging.INFO) 
-
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.INFO)  
-
-        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-        file_handler.setFormatter(formatter)
-        stream_handler.setFormatter(formatter)
-
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(stream_handler)
+        # Initialize logger.
+        self.logger = setup_logger(__name__, "twitter_request.log")
     
-    # Exponential backoff in case of API rate limit or timeout
+    # Exponential backoff in case of API rate limit or timeout.
     @backoff.on_exception(
             backoff.expo, 
             (tweepy.errors.TooManyRequests, requests.exceptions.ReadTimeout),
@@ -63,12 +50,12 @@ class GetTweets:
         the request, ensuring that the API rate limit is not exceeded.
         """
 
-        # No retweets or replies
+        # No retweets or replies.
         self.query = f"{self.query} -is:retweet -is:reply"
 
         self.logger.info("Making request with query: %s", self.query)
 
-        # Make request
+        # Make request.
         try:
             self.tweets = client.search_recent_tweets(
                 query = self.query,
@@ -87,11 +74,11 @@ class GetTweets:
                     "author_id", "referenced_tweets.id"
                 ]
             )
-            # If no tweets are returned, log error and return None
+            # If no tweets are returned, log error and return None.
             if self.tweets is None or self.tweets.data is None:
                 self.logger.error("No tweets returned from request")
                 return self
-        # If an exception occurs, log error and raise exception
+        # If an exception occurs, log error and raise exception.
         except Exception as e: 
             self.logger.error("Exception occurred", exc_info=True)
             raise 
