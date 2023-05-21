@@ -1,13 +1,15 @@
+import os
 import re
 import time
 import json
 import openai
+import backoff
+import requests
 import pandas as pd
-from authenticators import OpenAIAuthenticator
 
 
-gpt = OpenAIAuthenticator()
-openai.api_key = gpt.api_key
+api_key = os.environ.get('OPENAI_API_KEY')
+openai.api_key = api_key
 
 
 def remove_emojis_and_links(text: str) -> str:
@@ -35,6 +37,11 @@ def remove_emojis_and_links(text: str) -> str:
     return text
 
 
+@backoff.on_exception(
+        backoff.expo, 
+        (openai.error.RateLimitError, requests.exceptions.ReadTimeout),
+        max_tries=5
+    )
 def get_gpt_features(prompt: str, model: str = "gpt-3.5-turbo", temperature: float = 0) -> str: 
     messages = [{"role": "user", "content": prompt}]
     response = openai.ChatCompletion.create(
