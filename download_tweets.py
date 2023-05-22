@@ -5,19 +5,22 @@ from modules import GetTweets
 from modules import setup_logger
 from datetime import datetime, timedelta
 
-""""
-This program downloads tweets from the Twitter API and stores them in a
-pd.DataFrame. It also stores the users associated with the tweets in a
-separate pd.DataFrame.
+# Initialize logger.
+logger = setup_logger(__name__, "logs/download_tweets.log")
+
+'''
+This program downloads tweets from the Twitter API and stores them in two
+csv files. One file contains the tweets and the other contains the users
+who posted them.
 
 Since the GET_2_tweets_search_recent endpoint of the Twitter API only
 allows to download tweets from the last 7 days in batches of 60 tweets 
-every 15 minutes, the program is designed to download tweets in batches.
+every 15 minutes, the program is designed to download tweets in that way.
 
 The candidates selected are the five people currently leading the polls
 for the 2023 presidential elections in Guatemala. As of the Prensa Libre's
 poll of May 2023, these candidates are:
-"""
+'''
 
 candidates = [
     'carlos pineda', 
@@ -54,9 +57,7 @@ class DownloadTweets:
         self.tweets_prefix = tweets_prefix
         self.users_prefix = users_prefix
 
-        # Initialize logger.
-        self.logger = setup_logger(__name__, "logs/download_tweets.log")
-        self.logger.info("DownloadTweets initialized.")
+        logger.info("DownloadTweets initialized.")
 
     def generate_dates(self) -> "DownloadTweets":
         """
@@ -105,7 +106,7 @@ class DownloadTweets:
         # Add a column for the candidate mentioned in each tweet.
         tweets['candidato'] = candidate
 
-        self.logger.info(f"Downloaded batch of {len(tweets)} tweets for candidate {candidate}.")
+        logger.info(f"Downloaded batch of {len(tweets)} tweets for candidate {candidate}.")
         return tweets, users
     
     def download_tweets(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -115,7 +116,7 @@ class DownloadTweets:
         """
         
         self.generate_dates()
-        self.logger.info(f"Generated {len(self.dates)} date pairs for tweet downloads.")
+        logger.info(f"Generated {len(self.dates)} date pairs for tweet downloads.")
 
         # Collect tweets and users for each candidate.
         tweets_collector, users_collector = [], []
@@ -135,7 +136,7 @@ class DownloadTweets:
         self.tweets = pd.concat(tweets_collector, axis=0, ignore_index=True)
         self.users = pd.concat(users_collector, axis=0, ignore_index=True)
 
-        self.logger.info(f"Downloaded a total of {len(self.tweets)} tweets and {len(self.users)} users.")
+        logger.info(f"Downloaded a total of {len(self.tweets)} tweets and {len(self.users)} users.")
         return self.tweets, self.users
 
 
@@ -154,7 +155,6 @@ def main() -> Tuple[pd.DataFrame, pd.DataFrame]:
         return tweets, users
     
     except Exception as e:
-        logger = setup_logger(__name__, "download_tweets.log")
         logger.error(f"Failed to download tweets: {e}")
         raise e
 
@@ -168,12 +168,16 @@ if __name__ == "__main__":
     if not os.path.exists('data'):
         os.makedirs('data')
 
-    # Save the data.
-    write_header = not os.path.exists('data/tweets.csv')
-    tweets.to_csv('data/tweets.csv', mode='a', index=False, header=write_header)
-    
-    write_header = not os.path.exists('data/users.csv')
-    users.to_csv('data/users.csv', mode='a', index=False, header=write_header)
+    # Check if files exist.
+    tweets_exist = os.path.exists('data/tweets.csv')
+    users_exist = os.path.exists('data/users.csv')
 
-    logger = setup_logger(__name__, "download_tweets.log")
-    logger.info("Data appended to 'data/tweets.csv' and 'data/users.csv'")
+    # Save the data.
+    tweets.to_csv('data/tweets.csv', mode='a', index=False, header=not tweets_exist)
+    users.to_csv('data/users.csv', mode='a', index=False, header=not users_exist)
+
+    # Log the results.
+    if tweets_exist:
+        logger.info("Data appended to 'data/tweets.csv' and 'data/users.csv'")
+    else:
+        logger.info("Data saved to 'data/tweets.csv' and 'data/users.csv'")
