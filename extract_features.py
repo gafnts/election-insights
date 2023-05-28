@@ -8,8 +8,21 @@ from modules import OpenAIRequest
 logger = setup_logger(__name__, "logs/extract_features.log")
 
 
+'''
+This program extracts features from tweets using the OpenAI API and stores them
+in a csv file. The features are extracted using the GPT-3.5-turbo language model.
+
+The program is designed to extract features in such a way that it can be stopped
+and restarted at any time. The program will load the tweets from the `tweets.csv`
+file and the features from the `tweets_gpt_features.csv` file. It will then
+compare the two files and extract the features from the tweets that are not
+already in the `tweets_gpt_features.csv` file.
+'''
+
+
 class FeatureExtraction:
     def __init__(self, df_path: str, results_df_path: str) -> None:
+
         # Initialize parameters.
         self.df_path = df_path
         self.results_df_path = results_df_path
