@@ -1,8 +1,8 @@
 import os
 import pandas as pd
 from typing import Tuple
-from modules import GetTweets
 from modules import setup_logger
+from modules import TwitterRequest
 from datetime import datetime, timedelta
 
 # Initialize logger.
@@ -31,8 +31,8 @@ candidates = [
 ]
 
 # Other request parameters.
-start_date = datetime(2023, 5, 15, 00, 00)
-end_date = datetime(2023, 5, 20, 00, 00)
+start_date = datetime(2023, 5, 21, 14, 00)
+end_date = datetime(2023, 5, 27, 13, 00)
 max_results = 10
 tweets_prefix = 'tw_'
 users_prefix = 'us_'
@@ -87,7 +87,7 @@ class DownloadTweets:
         """
 
         tweets, users = (
-            GetTweets(
+            TwitterRequest(
                 query=candidate,
                 start_time=start_date,
                 end_time=end_date,
