@@ -5,7 +5,7 @@ from modules import OpenAIRequest
 
 
 # Initialize logger.
-logger = setup_logger(__name__, "logs/gpt_feature_extraction.log")
+logger = setup_logger(__name__, "logs/extract_features.log")
 
 
 class FeatureExtraction:
@@ -21,12 +21,13 @@ class FeatureExtraction:
 
         try:
             df_results = pd.read_csv(self.results_df_path)
-            logger.info('`tweets_gpt_features.csv` has been loaded')
+            df_results = df_results.drop_duplicates(subset=['tw_texto'], keep='first')
+            logger.info(f'`tweets_gpt_features.csv` has been loaded, there are {len(df) - len(df_results)} rows to process')
         except FileNotFoundError:
             df_results = pd.DataFrame()
-            logger.info('`tweets_gpt_features.csv` has been initialized')
+            logger.info('`tweets_gpt_features.csv` has been finitialized')
 
-        df_to_process = df[~df.index.isin(df_results.index)]
+        df_to_process = df[~df['tw_texto'].isin(df_results['tw_texto'])]
         df_to_process = df_to_process.dropna()
 
         logger.info('Processing rows for GPT zero-shot feature extraction')
