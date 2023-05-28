@@ -12,12 +12,21 @@ openai.api_key = api_key
 
 
 class OpenAIRequest:
+    """
+    This class is responsible for sending a request to the OpenAI API, in its
+    GPT-3.5-turbo language model, to extract features from a given tweet.
+
+    Every method (except the last one) returns the class instance, so that
+    the methods can be chained together. The tweet is passed as a parameter,
+    preprocessed and then sent to the model with a prompt that defines the
+    features to be extracted.
+
+    The class uses the backoff library to retry the request if it fails and the
+    response is returned as a dictionary with the feature names as keys.
+    """
+    
     def __init__(self, tweet: str) -> None:
-
-        # Initialize parameters.
         self.tweet = tweet
-
-        # Initialize logger.
         self.logger = setup_logger(__name__, "logs/openai_request.log")
     
     @staticmethod
@@ -54,7 +63,7 @@ class OpenAIRequest:
 
     def preprocess_text(self) -> "OpenAIRequest":
         """
-        This method preprocesses the tweet before sending them to the OpenAI API.
+        This method preprocesses the tweet before sending it to the OpenAI API.
         """
         self.tweet = OpenAIRequest.remove_emojis_and_links(self.tweet)
         return self
@@ -81,12 +90,8 @@ class OpenAIRequest:
     
     def extract_features(self, prefix: str) -> dict:
         """
-        This method extracts the features from the tweets using the GPT-3.5-turbo language model.
-        
-        It iterates over the tweets and for each one it sents a prompt to the OpenAI API.
-        The response is a JSON object that is parsed and converted to a pd.DataFrame.
-
-        This DataFrame is then concatenated to the original DataFrame and returned.
+        This method defines the prompt that will be sent to the OpenAI API, makes the request
+        and returns the response as a dictionary with the feature names as keys.
         """
 
         prompt = f"""

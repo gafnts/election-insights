@@ -23,14 +23,10 @@ class TwitterRequest:
     """
     
     def __init__(self, query: str, start_time: str, end_time: str, max_results: str) -> None:
-        
-        # Initialize parameters.
         self.query = query
         self.start_time = start_time
         self.end_time = end_time
         self.max_results = max_results
-
-        # Initialize logger.
         self.logger = setup_logger(__name__, "logs/twitter_request.log")
     
     # Exponential backoff in case of API rate limit or timeout.
