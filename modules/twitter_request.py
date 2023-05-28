@@ -10,7 +10,7 @@ bearer_token = os.environ.get('TWITTER_BEARER_TOKEN')
 client = tweepy.Client(bearer_token=bearer_token)
 
 
-class GetTweets:
+class TwitterRequest:
     """
     This class is responsible for fetching tweets from Twitter API,
     extracting the relevant information and storing it in a pd.DataFrame.
@@ -39,7 +39,7 @@ class GetTweets:
             (tweepy.errors.TooManyRequests, requests.exceptions.ReadTimeout),
             max_tries=5
         )
-    def make_request(self) -> "GetTweets":
+    def make_request(self) -> "TwitterRequest":
         """
         This method makes a request to the Twitter API. 
         
@@ -86,7 +86,7 @@ class GetTweets:
         self.logger.info("Request completed successfully.")
         return self
 
-    def tweets_to_dataframe(self) -> "GetTweets":
+    def tweets_to_dataframe(self) -> "TwitterRequest":
         """
         This method extracts the tweets from the request into a pd.DataFrame format.
 
@@ -110,7 +110,7 @@ class GetTweets:
         self.logger.info("The tweet data was successfully stored in a pd.DataFrame.")
         return self
 
-    def users_to_dataframe(self) -> "GetTweets":
+    def users_to_dataframe(self) -> "TwitterRequest":
         """
         For convienence, this method extracts the user data from the request into the
         same pd.DataFrame as the tweets.
@@ -139,7 +139,7 @@ class GetTweets:
         self.logger.info("The user data was successfully stored in a pd.DataFrame.")
         return self
 
-    def segregate_dataframe(self) -> "GetTweets":
+    def segregate_dataframe(self) -> "TwitterRequest":
         """
         Now, the data is segregated into two pd.DataFrames: one for tweets and one for users.
         """
