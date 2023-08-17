@@ -7,7 +7,7 @@ attrs==23.1.0
 backcall @ file:///home/conda/feedstock_root/build_artifacts/backcall_1592338393461/work
 backoff==2.2.1
 backports.functools-lru-cache @ file:///home/conda/feedstock_root/build_artifacts/backports.functools_lru_cache_1618230623929/work
-certifi==2022.12.7
+certifi==2023.7.22
 charset-normalizer==3.1.0
 colorlog==4.8.0
 comm @ file:///home/conda/feedstock_root/build_artifacts/comm_1679481329611/work
